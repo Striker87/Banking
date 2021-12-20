@@ -16,7 +16,7 @@ type CustomerHanlders struct {
 func (ch *CustomerHanlders) getAllCustomers(w http.ResponseWriter, r *http.Request) {
 	customers, err := ch.service.GetAllCustomers()
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		writeResponse(w, err.Code, err.AsMessage())
 		return
 	}
 
