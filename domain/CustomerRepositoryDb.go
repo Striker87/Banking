@@ -7,29 +7,28 @@ import (
 	"github.com/Striker87/Banking/errs"
 	"github.com/Striker87/Banking/logger"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 )
 
 type CustomerRepositoryDb struct {
 	client *sql.DB
 }
 
-func (d CustomerRepositoryDb) FindAll() ([]Customer, error) {
+func (d CustomerRepositoryDb) FindAll() ([]Customer, *errs.AppError) {
+	//var rows *sql.Rows
 	rows, err := d.client.Query("SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers")
 	if err != nil {
 		logger.Error("error while querying customer table due error: " + err.Error())
-		return nil, err
+		return nil, errs.NewUnexpectedError("unexpectred database error")
 	}
 
 	customers := make([]Customer, 0)
-	for rows.Next() {
-		var c Customer
-		err := rows.Scan(&c.Id, &c.Name, &c.City, &c.Zipcode, &c.DateofBirth, &c.Status)
-		if err != nil {
-			logger.Error("error while scanning customer due error: " + err.Error())
-			return nil, err
-		}
-		customers = append(customers, c)
+	err = sqlx.StructScan(rows, &customers)
+	if err != nil {
+		logger.Error("error while scanning customer due error: " + err.Error())
+		return nil, errs.NewUnexpectedError("unexpectred database error")
 	}
+
 	return customers, nil
 }
 
