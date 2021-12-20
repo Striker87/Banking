@@ -15,10 +15,6 @@ type Customer struct {
 	Zipcode string `json:"zipcode"`
 }
 
-type CustomerHanlders struct {
-	service service.CustomerService
-}
-
 func Start() {
 	router := mux.NewRouter()
 
