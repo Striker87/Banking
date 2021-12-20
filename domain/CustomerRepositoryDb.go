@@ -15,7 +15,6 @@ type CustomerRepositoryDb struct {
 }
 
 func (d CustomerRepositoryDb) FindAll() ([]Customer, *errs.AppError) {
-	//var rows *sql.Rows
 	rows, err := d.client.Query("SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers")
 	if err != nil {
 		logger.Error("error while querying customer table due error: " + err.Error())
