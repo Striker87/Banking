@@ -14,13 +14,15 @@ type CustomerHanlders struct {
 }
 
 func (ch *CustomerHanlders) getAllCustomers(w http.ResponseWriter, r *http.Request) {
-	customers, err := ch.service.GetAllCustomers()
+	w.Header().Set("Content-Type", "application/json")
+
+	status := r.URL.Query().Get("status")
+	customers, err := ch.service.GetAllCustomers(status)
 	if err != nil {
 		writeResponse(w, err.Code, err.AsMessage())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(customers)
 }
 
@@ -33,6 +35,7 @@ func (ch *CustomerHanlders) getCustomer(w http.ResponseWriter, r *http.Request) 
 		writeResponse(w, err.Code, err.AsMessage())
 		return
 	}
+
 	writeResponse(w, http.StatusOK, customer)
 }
 

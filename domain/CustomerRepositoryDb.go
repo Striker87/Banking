@@ -11,20 +11,21 @@ import (
 )
 
 type CustomerRepositoryDb struct {
-	client *sql.DB
+	client *sqlx.DB
 }
 
-func (d CustomerRepositoryDb) FindAll() ([]Customer, *errs.AppError) {
-	rows, err := d.client.Query("SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers")
-	if err != nil {
-		logger.Error("error while querying customer table due error: " + err.Error())
-		return nil, errs.NewUnexpectedError("unexpectred database error")
+func (d CustomerRepositoryDb) FindAll(status string) ([]Customer, *errs.AppError) {
+	var err error
+	var customers = make([]Customer, 0)
+
+	if status == "" {
+		err = d.client.Select(&customers, "SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers")
+	} else {
+		err = d.client.Select(&customers, "SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers WHERE status = ?", status)
 	}
 
-	customers := make([]Customer, 0)
-	err = sqlx.StructScan(rows, &customers)
 	if err != nil {
-		logger.Error("error while scanning customer due error: " + err.Error())
+		logger.Error("error while querying customer table due error: " + err.Error())
 		return nil, errs.NewUnexpectedError("unexpectred database error")
 	}
 
@@ -33,7 +34,7 @@ func (d CustomerRepositoryDb) FindAll() ([]Customer, *errs.AppError) {
 
 func (d CustomerRepositoryDb) ById(id string) (*Customer, *errs.AppError) {
 	var c Customer
-	err := d.client.QueryRow("SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers WHERE customer_id = ?", id).Scan(&c.Id, &c.Name, &c.City, &c.Zipcode, &c.DateofBirth, &c.Status)
+	err := d.client.Get(&c, "SELECT customer_id, `name`, city, zipcode, date_of_birth, `status` FROM customers WHERE customer_id = ?", id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("customer not found")
@@ -46,7 +47,7 @@ func (d CustomerRepositoryDb) ById(id string) (*Customer, *errs.AppError) {
 }
 
 func NewCustomerRepositoryDb() CustomerRepositoryDb {
-	client, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/banking")
+	client, err := sqlx.Connect("mysql", "root:@tcp(127.0.0.1:3306)/banking")
 	if err != nil {
 		panic(err)
 	}
