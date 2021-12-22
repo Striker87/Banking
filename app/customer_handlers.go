@@ -42,6 +42,7 @@ func (ch *CustomerHanlders) getCustomer(w http.ResponseWriter, r *http.Request) 
 func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
+
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		log.Printf("writeResponse() failed due error: %v", err)
 	}
